@@ -107,13 +107,27 @@
 
             const cunningham = 500 + (22 * lbm);
 
-            resultsDiv.innerHTML = `
-                <p><strong>Harris-Benedict:</strong> ${Math.round(harrisBenedict)} calories/day</p>
-                <p><strong>Mifflin-St Jeor:</strong> ${Math.round(mifflinStJeor)} calories/day</p>
-                <p><strong>Katch-McArdle:</strong> ${Math.round(katchMcArdle)} calories/day</p>
-                <p><strong>Owen:</strong> ${Math.round(owen)} calories/day</p>
-                <p><strong>Cunningham:</strong> ${Math.round(cunningham)} calories/day</p>
-            `;
+            const estimates = [
+                { name: 'Harris-Benedict', value: Math.round(harrisBenedict) },
+                { name: 'Mifflin-St Jeor', value: Math.round(mifflinStJeor) },
+                { name: 'Katch-McArdle', value: Math.round(katchMcArdle) },
+                { name: 'Owen', value: Math.round(owen) },
+                { name: 'Cunningham', value: Math.round(cunningham) }
+            ];
+
+            estimates.sort((a, b) => a.value - b.value);
+
+            const low = estimates[0];
+            const high = estimates[estimates.length - 1];
+            const median = estimates[Math.floor(estimates.length / 2)];
+
+            resultsDiv.innerHTML = estimates.map(estimate => {
+                let label = '';
+                if (estimate === low) label = ' <span class="text-blue-600">(low)</span>';
+                if (estimate === high) label = ' <span class="text-red-600">(high)</span>';
+                if (estimate === median) label = ' <span class="text-green-600">(median)</span>';
+                return `<p><strong>${estimate.name}:</strong> ${estimate.value} calories/day${label}</p>`;
+            }).join('');
         }
     </script>
 </body>
