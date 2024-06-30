@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RMR Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h1 class="text-2xl font-bold mb-4">RMR Calculator</h1>
+        <div class="mb-4">
+            <label for="unitToggle" class="inline-flex items-center cursor-pointer">
+                <span class="mr-3 text-sm font-medium text-gray-900">kg/cm</span>
+                <span class="relative">
+                    <input type="checkbox" id="unitToggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </span>
+                <span class="ml-3 text-sm font-medium text-gray-900">lb/in</span>
+            </label>
+        </div>
+        <form id="rmrForm" class="space-y-4">
+            <div>
+                <label for="weight" class="block text-sm font-medium text-gray-700">Weight (kg)</label>
+                <input type="number" id="weight" name="weight" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <div>
+                <label for="height" class="block text-sm font-medium text-gray-700">Height (cm)</label>
+                <input type="number" id="height" name="height" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <div>
+                <label for="age" class="block text-sm font-medium text-gray-700">Age (years)</label>
+                <input type="number" id="age" name="age" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <div>
+                <label for="lbm" class="block text-sm font-medium text-gray-700">Lean Body Mass (kg)</label>
+                <input type="number" id="lbm" name="lbm" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Gender</label>
+                <div class="mt-2">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="gender" value="male" checked class="form-radio text-indigo-600">
+                        <span class="ml-2">Male</span>
+                    </label>
+                    <label class="inline-flex items-center ml-6">
+                        <input type="radio" name="gender" value="female" class="form-radio text-indigo-600">
+                        <span class="ml-2">Female</span>
+                    </label>
+                </div>
+            </div>
+        </form>
+        <div id="results" class="mt-6 space-y-2"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('rmrForm');
+        const resultsDiv = document.getElementById('results');
+        const unitToggle = document.getElementById('unitToggle');
+        const weightLabel = document.querySelector('label[for="weight"]');
+        const heightLabel = document.querySelector('label[for="height"]');
+        const lbmLabel = document.querySelector('label[for="lbm"]');
+
+        form.addEventListener('input', calculateRMR);
+        unitToggle.addEventListener('change', updateUnits);
+
+        function updateUnits() {
+            const isImperial = unitToggle.checked;
+            weightLabel.textContent = `Weight (${isImperial ? 'lb' : 'kg'})`;
+            heightLabel.textContent = `Height (${isImperial ? 'in' : 'cm'})`;
+            lbmLabel.textContent = `Lean Body Mass (${isImperial ? 'lb' : 'kg'})`;
+            calculateRMR();
+        }
+
+        function calculateRMR() {
+            let weight = parseFloat(document.getElementById('weight').value);
+            let height = parseFloat(document.getElementById('height').value);
+            const age = parseFloat(document.getElementById('age').value);
+            let lbm = parseFloat(document.getElementById('lbm').value);
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const isImperial = unitToggle.checked;
+
+            if (isImperial) {
+                weight = weight * 0.453592; // lb to kg
+                height = height * 2.54; // in to cm
+                lbm = lbm * 0.453592; // lb to kg
+            }
+
+            if (isNaN(weight) || isNaN(height) || isNaN(age) || isNaN(lbm)) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            const harrisBenedict = gender === 'male'
+                ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+                : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+
+            const mifflinStJeor = gender === 'male'
+                ? (10 * weight) + (6.25 * height) - (5 * age) + 5
+                : (10 * weight) + (6.25 * height) - (5 * age) - 161;
+
+            const katchMcArdle = 370 + (21.6 * lbm);
+
+            const owen = gender === 'male'
+                ? 879 + (10.2 * weight)
+                : 795 + (7.18 * weight);
+
+            const cunningham = 500 + (22 * lbm);
+
+            resultsDiv.innerHTML = `
+                <p><strong>Harris-Benedict:</strong> ${Math.round(harrisBenedict)} calories/day</p>
+                <p><strong>Mifflin-St Jeor:</strong> ${Math.round(mifflinStJeor)} calories/day</p>
+                <p><strong>Katch-McArdle:</strong> ${Math.round(katchMcArdle)} calories/day</p>
+                <p><strong>Owen:</strong> ${Math.round(owen)} calories/day</p>
+                <p><strong>Cunningham:</strong> ${Math.round(cunningham)} calories/day</p>
+            `;
+        }
+    </script>
+</body>
+</html>
